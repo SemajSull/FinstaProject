@@ -17,7 +17,7 @@ import org.bson.Document;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    private EditText etEmail, etPassword, etConfirmPassword;
+    private EditText etUsername, etPassword, etConfirmPassword;
     private Button btnSignUp;
     private TextView tvGoToSignIn;
 
@@ -27,7 +27,7 @@ public class SignUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_up);
 
         // Wire up the views:
-        etEmail           = findViewById(R.id.etSignUpEmail);
+        etUsername           = findViewById(R.id.etSignUpUsername);
         etPassword        = findViewById(R.id.etSignUpPassword);
         etConfirmPassword = findViewById(R.id.etSignUpConfirmPassword);
         btnSignUp         = findViewById(R.id.btnSignUp);
@@ -44,12 +44,12 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void attemptSignUp() {
-        String email           = etEmail.getText().toString().trim();
+        String username           = etUsername.getText().toString().trim();
         String password        = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(email)) {
-            etEmail.setError("Email required");
+        if (TextUtils.isEmpty(username)) {
+            etUsername.setError("Username required");
             return;
         }
         if (TextUtils.isEmpty(password)) {
@@ -62,15 +62,15 @@ public class SignUpActivity extends AppCompatActivity {
         }
 
         // Insert a new user on a background thread:
-        new InsertUserTask(email, password).execute();
+        new InsertUserTask(username, password).execute();
     }
 
     private class InsertUserTask extends AsyncTask<Void, Void, Boolean> {
-        private final String email, password;
+        private final String username, password;
         private String errorMessage = null;
 
-        InsertUserTask(String email, String password) {
-            this.email    = email;
+        InsertUserTask(String username, String password) {
+            this.username    = username;
             this.password = password;
         }
 
@@ -81,16 +81,16 @@ public class SignUpActivity extends AppCompatActivity {
                 MongoDatabase db = MongoUtil.getAppDatabase();
                 MongoCollection<Document> usersColl = db.getCollection("users");
 
-                // 2. Check if this email already exists
-                Document existing = usersColl.find(new Document("email", email)).first();
+                // 2. Check if this username already exists
+                Document existing = usersColl.find(new Document("username", username)).first();
                 if (existing != null) {
-                    errorMessage = "An account with that email already exists.";
+                    errorMessage = "An account with that username already exists.";
                     return false;
                 }
 
                 // 3. Create and insert a new user document
                 Document newUser = new Document();
-                newUser.put("email", email);
+                newUser.put("username", username);
                 newUser.put("password", password); // plaintext for demo-only
 
                 usersColl.insertOne(newUser);

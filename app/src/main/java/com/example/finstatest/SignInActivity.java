@@ -18,7 +18,7 @@ import org.bson.Document;
 
 public class SignInActivity extends AppCompatActivity {
 
-    private EditText etEmail, etPassword;
+    private EditText etUsername, etPassword;
     private Button btnSignIn;
     private TextView tvGoToSignUp;
 
@@ -28,7 +28,7 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_in);
 
         // Wire up the views:
-        etEmail       = findViewById(R.id.etSignInEmail);
+        etUsername       = findViewById(R.id.etSignInUsername);
         etPassword    = findViewById(R.id.etSignInPassword);
         btnSignIn     = findViewById(R.id.btnSignIn);
         tvGoToSignUp  = findViewById(R.id.tvGoToSignUp);
@@ -44,11 +44,11 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void attemptSignIn() {
-        String email    = etEmail.getText().toString().trim();
+        String username    = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (TextUtils.isEmpty(email)) {
-            etEmail.setError("Email required");
+        if (TextUtils.isEmpty(username)) {
+            etUsername.setError("Username required");
             return;
         }
         if (TextUtils.isEmpty(password)) {
@@ -57,15 +57,15 @@ public class SignInActivity extends AppCompatActivity {
         }
 
         // Run DB query on background thread:
-        new ValidateUserTask(email, password).execute();
+        new ValidateUserTask(username, password).execute();
     }
 
     private class ValidateUserTask extends AsyncTask<Void, Void, Boolean> {
-        private final String email, password;
+        private final String username, password;
         private String errorMessage = null;
 
-        ValidateUserTask(String email, String password) {
-            this.email    = email;
+        ValidateUserTask(String username, String password) {
+            this.username    = username;
             this.password = password;
         }
 
@@ -76,8 +76,8 @@ public class SignInActivity extends AppCompatActivity {
                 MongoDatabase db = MongoUtil.getAppDatabase();
                 MongoCollection<Document> usersColl = db.getCollection("users");
 
-                // 2. Look up a document where email/password match
-                Document query = new Document("email", email)
+                // 2. Look up a document where username/password match
+                Document query = new Document("username", username)
                         .append("password", password);
                 Document userDoc = usersColl.find(query).first();
 
@@ -104,7 +104,7 @@ public class SignInActivity extends AppCompatActivity {
                             errorMessage, Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(SignInActivity.this,
-                            "Invalid email or password.",
+                            "Invalid username or password.",
                             Toast.LENGTH_LONG).show();
                 }
             }
