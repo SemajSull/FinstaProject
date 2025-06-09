@@ -70,7 +70,7 @@ public class SignUpActivity extends AppCompatActivity {
         private String errorMessage = null;
 
         InsertUserTask(String username, String password) {
-            this.username    = username;
+            this.username = username;
             this.password = password;
         }
 
