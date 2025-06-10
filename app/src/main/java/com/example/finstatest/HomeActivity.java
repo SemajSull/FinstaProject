@@ -1,5 +1,6 @@
 package com.example.finstatest;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import androidx.annotation.NonNull;
@@ -60,7 +61,10 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
             }
             else if (id == R.id.nav_profile) {
-                // TODO: launch ProfileActivity
+                Intent profileIntent = new Intent(HomeActivity.this, ProfileActivity.class);
+                profileIntent.putExtra("username", "user"); // TODO: Pass actual username
+                startActivity(profileIntent);
+                finish();
                 return true;
             }
             return false;
