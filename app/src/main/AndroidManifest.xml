@@ -35,6 +35,12 @@
             android:name=".SignUpActivity"
             android:exported="false" />
 
+        <!-- Home screen -->
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+
+
     </application>
 
 </manifest>
