@@ -18,7 +18,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProfileActivity extends AppCompatActivity {
+public class ProfileActivity extends AppCompatActivity implements PostAdapter.OnPostInteractionListener {
     private ImageView profileImage;
     private TextView usernameText;
     private EditText bioText;
@@ -79,7 +79,7 @@ public class ProfileActivity extends AppCompatActivity {
         postsGrid = findViewById(R.id.postsGrid);
         postsGrid.setLayoutManager(new GridLayoutManager(this, 3));
         userPosts = new ArrayList<>();
-        postAdapter = new PostAdapter(userPosts);
+        postAdapter = new PostAdapter(userPosts, this);
         postsGrid.setAdapter(postAdapter);
     }
 
@@ -127,42 +127,39 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        // Profile image click to change
-        profileImage.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
-
-        // Edit profile button
         editProfileButton.setOnClickListener(v -> {
-            // Toggle bio editability
-            bioText.setEnabled(!bioText.isEnabled());
-            if (!bioText.isEnabled()) {
-                currentBio = bioText.getText().toString();
-                Toast.makeText(this, "Bio updated!", Toast.LENGTH_SHORT).show();
-            }
+            // TODO: Implement edit profile functionality
+            Toast.makeText(this, "Edit profile coming soon!", Toast.LENGTH_SHORT).show();
         });
 
-        // Change theme button
         changeThemeButton.setOnClickListener(v -> {
-            // TODO: Implement theme selection
-            Toast.makeText(this, "Theme selection coming soon!", Toast.LENGTH_SHORT).show();
+            // TODO: Implement theme change functionality
+            Toast.makeText(this, "Theme change coming soon!", Toast.LENGTH_SHORT).show();
         });
 
-        // Change music button
         changeMusicButton.setOnClickListener(v -> {
-            // TODO: Implement music selection
-            Toast.makeText(this, "Music selection coming soon!", Toast.LENGTH_SHORT).show();
+            // TODO: Implement music change functionality
+            Toast.makeText(this, "Music change coming soon!", Toast.LENGTH_SHORT).show();
+        });
+
+        profileImage.setOnClickListener(v -> {
+            imagePickerLauncher.launch("image/*");
         });
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        // Save any changes made to the profile
-        saveProfileChanges();
+    public void onLikeClick(Post post, int position) {
+        // Toggle like state
+        post.setLiked(!post.isLiked());
+        post.setLikesCount(post.getLikesCount() + (post.isLiked() ? 1 : -1));
+        postAdapter.notifyItemChanged(position);
+        
+        // TODO: Update like in backend
     }
 
-    private void saveProfileChanges() {
-        // TODO: Implement saving profile changes to database
-        // For now, just update local variables
-        currentBio = bioText.getText().toString();
+    @Override
+    public void onCommentClick(Post post, int position) {
+        // TODO: Show comment dialog/activity
+        Toast.makeText(this, "Comment functionality coming soon!", Toast.LENGTH_SHORT).show();
     }
 } 
