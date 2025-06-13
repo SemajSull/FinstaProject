@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -159,7 +160,25 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
 
     @Override
     public void onCommentClick(Post post, int position) {
-        // TODO: Show comment dialog/activity
-        Toast.makeText(this, "Comment functionality coming soon!", Toast.LENGTH_SHORT).show();
+        // Show comment dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_comment, null);
+        EditText etCommentInput = dialogView.findViewById(R.id.etCommentInput);
+
+        builder.setView(dialogView)
+                .setTitle("Add a Comment")
+                .setPositiveButton("Add", (dialog, which) -> {
+                    String commentText = etCommentInput.getText().toString().trim();
+                    if (!commentText.isEmpty()) {
+                        // TODO: Replace "current_user" with actual authenticated username
+                        String fullComment = "current_user: " + commentText;
+                        post.addComment(fullComment);
+                        postAdapter.notifyItemChanged(position);
+                        Toast.makeText(this, "Comment added!", Toast.LENGTH_SHORT).show();
+                        // TODO: Update comment in backend
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.create().show();
     }
 } 

@@ -3,8 +3,11 @@ package com.example.finstatest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,70 +40,70 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
                 "https://via.placeholder.com/600x400.png?text=Post+Image+1",
                 "This is a test post.",
                 12,
-                Arrays.asList("Nice!", "Love it!")
+                new ArrayList<>(Arrays.asList("Nice!", "Love it!"))
         ));
         postList.add(new Post(
                 "user2",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+2",
                 "Welcome to Finsta!",
                 34,
-                Arrays.asList("Cool pic", "Awesome!")
+                new ArrayList<>(Arrays.asList("Cool pic", "Awesome!"))
         ));
         postList.add(new Post(
                 "user3",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+3",
                 "Enjoying the day!",
                 20,
-                Arrays.asList("Great photo!", "So beautiful!")
+                new ArrayList<>(Arrays.asList("Great photo!", "So beautiful!"))
         ));
         postList.add(new Post(
                 "user4",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+4",
                 "New adventures ahead.",
                 45,
-                Arrays.asList("Awesome!", "Where is this?")
+                new ArrayList<>(Arrays.asList("Awesome!", "Where is this?"))
         ));
         postList.add(new Post(
                 "user1",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+5",
                 "Learning something new.",
                 8,
-                Arrays.asList("Keep it up!", "Interesting")
+                new ArrayList<>(Arrays.asList("Keep it up!", "Interesting"))
         ));
         postList.add(new Post(
                 "user5",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+6",
                 "Weekend vibes.",
                 50,
-                Arrays.asList("Relaxing!", "Wish I was there.")
+                new ArrayList<>(Arrays.asList("Relaxing!", "Wish I was there."))
         ));
         postList.add(new Post(
                 "user2",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+7",
                 "Exploring new places.",
                 62,
-                Arrays.asList("Amazing view!", "Travel goals")
+                new ArrayList<>(Arrays.asList("Amazing view!", "Travel goals"))
         ));
         postList.add(new Post(
                 "user3",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+8",
                 "Morning coffee.",
                 15,
-                Arrays.asList("Good morning!", "Looks delicious")
+                new ArrayList<>(Arrays.asList("Good morning!", "Looks delicious"))
         ));
         postList.add(new Post(
                 "user4",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+9",
                 "Coding session.",
                 28,
-                Arrays.asList("Hard work pays off!", "Get it!")
+                new ArrayList<>(Arrays.asList("Hard work pays off!", "Get it!"))
         ));
         postList.add(new Post(
                 "user5",
                 "https://via.placeholder.com/600x400.png?text=Post+Image+10",
                 "Sunset views.",
                 70,
-                Arrays.asList("Stunning!", "Beautiful sunset")
+                new ArrayList<>(Arrays.asList("Stunning!", "Beautiful sunset"))
         ));
 
         // Sort posts by date (most recent first)
@@ -152,7 +155,25 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
 
     @Override
     public void onCommentClick(Post post, int position) {
-        // TODO: Show comment dialog/activity
-        Toast.makeText(this, "Comment functionality coming soon!", Toast.LENGTH_SHORT).show();
+        // Show comment dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_comment, null);
+        EditText etCommentInput = dialogView.findViewById(R.id.etCommentInput);
+
+        builder.setView(dialogView)
+                .setTitle("Add a Comment")
+                .setPositiveButton("Add", (dialog, which) -> {
+                    String commentText = etCommentInput.getText().toString().trim();
+                    if (!commentText.isEmpty()) {
+                        // TODO: Replace "current_user" with actual authenticated username
+                        String fullComment = "current_user: " + commentText;
+                        post.addComment(fullComment);
+                        adapter.notifyItemChanged(position);
+                        Toast.makeText(this, "Comment added!", Toast.LENGTH_SHORT).show();
+                        // TODO: Update comment in backend
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.create().show();
     }
 }
