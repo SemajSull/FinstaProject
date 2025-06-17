@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.finstatest.api.ApiService;
 import com.example.finstatest.api.ApiServiceInstance;
 import com.example.finstatest.models.User;
+import com.example.finstatest.models.SignInRequest;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -66,13 +67,57 @@ public class SignInActivity extends AppCompatActivity {
                 Log.d("SIGNIN", "onResponse: code[" + response.code() + "]  message[" + response.message() + "]");
                 if (response.isSuccessful()) {
                     User user = response.body();
-                    if (user.getPasswordHash().equals(password)) {
-                        Toast.makeText(SignInActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(SignInActivity.this, HomeActivity.class);
-                        startActivity(intent);
-                        finish();
+                    Log.d("SIGNIN", "Initial user response: " + (user != null ? "User found" : "User null"));
+                    if (user != null) {
+                        Log.d("SIGNIN", "User ID from initial response: " + user.getId());
+                        // Now call the sign-in API with both username and password
+                        SignInRequest signInRequest = new SignInRequest(username, password);
+                        apiService.signInUser(signInRequest).enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> signInResponse) {
+                                Log.d("SIGNIN", "Sign-in response code: " + signInResponse.code());
+                                if (signInResponse.isSuccessful()) {
+                                    // After successful sign-in, fetch the user details to get their ID
+                                    apiService.getUserByUsername(username).enqueue(new Callback<User>() {
+                                        @Override
+                                        public void onResponse(Call<User> call, Response<User> userResponse) {
+                                            Log.d("SIGNIN", "Final user response code: " + userResponse.code());
+                                            if (userResponse.isSuccessful() && userResponse.body() != null) {
+                                                User loggedInUser = userResponse.body();
+                                                Log.d("SIGNIN_USER_ID", "Retrieved User ID: " + loggedInUser.getId());
+                                                if (loggedInUser.getId() == null) {
+                                                    Log.e("SIGNIN", "User ID is still null after successful response!");
+                                                }
+                                                Toast.makeText(SignInActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
+                                                Intent intent = new Intent(SignInActivity.this, HomeActivity.class);
+                                                intent.putExtra("loggedInUserId", loggedInUser.getId());
+                                                startActivity(intent);
+                                                finish();
+                                            } else {
+                                                Log.e("SIGNIN", "Failed to get user details. Response: " + userResponse.message());
+                                                Toast.makeText(SignInActivity.this, "Failed to retrieve user details.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<User> call, Throwable t) {
+                                            Toast.makeText(SignInActivity.this, "Network error fetching user details", Toast.LENGTH_SHORT).show();
+                                            Log.e("SIGNIN", "Error fetching user details: " + t.getMessage(), t);
+                                        }
+                                    });
+                                } else {
+                                    Toast.makeText(SignInActivity.this, "Incorrect password.", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                Toast.makeText(SignInActivity.this, "Network error during sign-in", Toast.LENGTH_SHORT).show();
+                                Log.e("API_ERROR", "Sign-in failed: " + t.getMessage(), t);
+                            }
+                        });
                     } else {
-                        Toast.makeText(SignInActivity.this, "Incorrect password.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(SignInActivity.this, "User not found", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     Toast.makeText(SignInActivity.this, "User not found", Toast.LENGTH_SHORT).show();
@@ -85,6 +130,5 @@ public class SignInActivity extends AppCompatActivity {
                 Log.e("API_ERROR", t.getMessage(), t);
             }
         });
-
     }
 }

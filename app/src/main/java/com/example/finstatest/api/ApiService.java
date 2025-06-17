@@ -2,6 +2,8 @@ package com.example.finstatest.api;
 
 import com.example.finstatest.models.CountResponse;
 import com.example.finstatest.models.User;
+import com.example.finstatest.models.SignInRequest;
+import com.example.finstatest.Post;
 
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -32,4 +34,13 @@ public interface ApiService {
      */
     @GET("/users/username/{username}")
     Call<User> getUserByUsername(@Path("username") String username);
+
+    @POST("/signin")
+    Call<Void> signInUser(@Body SignInRequest signInRequest);
+
+    @GET("/posts/followed/{userId}")
+    Call<List<Post>> getFollowedPosts(@Path("userId") String userId);
+
+    @POST("/users/{followerId}/follow/{followeeId}")
+    Call<Void> followUser(@Path("followerId") String followerId, @Path("followeeId") String followeeId);
 }

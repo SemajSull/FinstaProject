@@ -1,13 +1,15 @@
 package com.example.finstatest.models;
 
-import org.bson.types.ObjectId;
+// import org.bson.types.ObjectId; // Removed this import
 import java.util.Date;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Model class for the User
  */
 public class User {
-    private ObjectId id;
+    @SerializedName("id")
+    private String id;
     private String username;
     private String passwordHash;
     private String bio;
@@ -25,11 +27,11 @@ public class User {
     }
 
     // Getters and Setters
-    public ObjectId getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(ObjectId id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -2,9 +2,11 @@ package com.example.finstatest;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -13,105 +15,61 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import com.example.finstatest.api.ApiService;
+import com.example.finstatest.api.ApiServiceInstance;
+import com.example.finstatest.Post;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPostInteractionListener {
 
     private RecyclerView recyclerView;
     private PostAdapter adapter;
     private List<Post> postList;
+    private String loggedInUserId;
+
+    private ApiService apiService;
+    private TextView tvNoPostsMessage; // Added for the message
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        apiService = ApiServiceInstance.getService();
+
+        // Get the logged-in user ID from the Intent
+        if (getIntent().hasExtra("loggedInUserId")) {
+            loggedInUserId = getIntent().getStringExtra("loggedInUserId");
+        } else {
+            Toast.makeText(this, "User ID not found, please log in again.", Toast.LENGTH_LONG).show();
+            // Optionally, redirect to sign-in
+            finish();
+            return;
+        }
+
         // 1) Setup RecyclerView
         recyclerView = findViewById(R.id.recyclerViewPosts);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // 2) Sample data (replace with real data source later)
+        tvNoPostsMessage = findViewById(R.id.tvNoPostsMessage); // Initialize the TextView
+        // Initially hide the message
+        tvNoPostsMessage.setVisibility(View.GONE);
+
+        // 2) Initialize empty post list and attach adapter
         postList = new ArrayList<>();
-        postList.add(new Post(
-                "user1",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+1",
-                "This is a test post.",
-                12,
-                new ArrayList<>(Arrays.asList("Nice!", "Love it!"))
-        ));
-        postList.add(new Post(
-                "user2",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+2",
-                "Welcome to Finsta!",
-                34,
-                new ArrayList<>(Arrays.asList("Cool pic", "Awesome!"))
-        ));
-        postList.add(new Post(
-                "user3",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+3",
-                "Enjoying the day!",
-                20,
-                new ArrayList<>(Arrays.asList("Great photo!", "So beautiful!"))
-        ));
-        postList.add(new Post(
-                "user4",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+4",
-                "New adventures ahead.",
-                45,
-                new ArrayList<>(Arrays.asList("Awesome!", "Where is this?"))
-        ));
-        postList.add(new Post(
-                "user1",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+5",
-                "Learning something new.",
-                8,
-                new ArrayList<>(Arrays.asList("Keep it up!", "Interesting"))
-        ));
-        postList.add(new Post(
-                "user5",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+6",
-                "Weekend vibes.",
-                50,
-                new ArrayList<>(Arrays.asList("Relaxing!", "Wish I was there."))
-        ));
-        postList.add(new Post(
-                "user2",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+7",
-                "Exploring new places.",
-                62,
-                new ArrayList<>(Arrays.asList("Amazing view!", "Travel goals"))
-        ));
-        postList.add(new Post(
-                "user3",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+8",
-                "Morning coffee.",
-                15,
-                new ArrayList<>(Arrays.asList("Good morning!", "Looks delicious"))
-        ));
-        postList.add(new Post(
-                "user4",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+9",
-                "Coding session.",
-                28,
-                new ArrayList<>(Arrays.asList("Hard work pays off!", "Get it!"))
-        ));
-        postList.add(new Post(
-                "user5",
-                "https://via.placeholder.com/600x400.png?text=Post+Image+10",
-                "Sunset views.",
-                70,
-                new ArrayList<>(Arrays.asList("Stunning!", "Beautiful sunset"))
-        ));
-
-        // Sort posts by date (most recent first)
-        Collections.sort(postList, (p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
-
-        // 3) Attach adapter
         adapter = new PostAdapter(postList, this);
         recyclerView.setAdapter(adapter);
+
+        // Fetch posts from followed users
+        fetchFollowedPosts();
 
         // 4) Setup Create Post FAB
         FloatingActionButton fabCreatePost = findViewById(R.id.fabCreatePost);
@@ -135,11 +93,67 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
             else if (id == R.id.nav_profile) {
                 Intent profileIntent = new Intent(HomeActivity.this, ProfileActivity.class);
                 profileIntent.putExtra("username", "user"); // TODO: Pass actual username
+                profileIntent.putExtra("loggedInUserId", loggedInUserId); // Pass the logged in user ID
                 startActivity(profileIntent);
                 finish();
                 return true;
             }
             return false;
+        });
+    }
+
+    private void fetchFollowedPosts() {
+        if (loggedInUserId == null) {
+            Toast.makeText(this, "User ID not available to fetch posts.", Toast.LENGTH_SHORT).show();
+            Log.e("HOME_ACTIVITY", "loggedInUserId is null, cannot fetch posts.");
+            return;
+        }
+
+        if (apiService == null) {
+            Toast.makeText(this, "API Service not initialized.", Toast.LENGTH_SHORT).show();
+            Log.e("HOME_ACTIVITY", "ApiService is null, cannot fetch posts.");
+            return;
+        }
+
+        Log.d("HOME_ACTIVITY", "Attempting to fetch posts for userId: " + loggedInUserId);
+        apiService.getFollowedPosts(loggedInUserId).enqueue(new Callback<List<Post>>() {
+            @Override
+            public void onResponse(Call<List<Post>> call, Response<List<Post>> response) {
+                Log.d("HOME_ACTIVITY_API", "API Response Code: " + response.code());
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d("HOME_ACTIVITY_API", "Response successful. Body size: " + response.body().size());
+                    postList.clear();
+                    postList.addAll(response.body());
+                    adapter.notifyDataSetChanged();
+
+                    Log.d("HOME_ACTIVITY_DATA", "Post list size after update: " + postList.size());
+
+                    // Show/hide message based on whether there are posts
+                    if (postList.isEmpty()) {
+                        tvNoPostsMessage.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                        Log.d("HOME_ACTIVITY_UI", "Displaying no posts message.");
+                    } else {
+                        tvNoPostsMessage.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.VISIBLE);
+                        Log.d("HOME_ACTIVITY_UI", "Displaying posts.");
+                    }
+
+                } else {
+                    Toast.makeText(HomeActivity.this, "Failed to load posts: " + response.message(), Toast.LENGTH_SHORT).show();
+                    tvNoPostsMessage.setVisibility(View.VISIBLE); // Show message on failure
+                    recyclerView.setVisibility(View.GONE);
+                    Log.e("HOME_ACTIVITY_API", "Failed to fetch posts. Response: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Post>> call, Throwable t) {
+                Toast.makeText(HomeActivity.this, "Network error fetching posts: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                tvNoPostsMessage.setVisibility(View.VISIBLE); // Show message on network error
+                recyclerView.setVisibility(View.GONE);
+                Log.e("HOME_ACTIVITY_API", "Network error: " + t.getMessage(), t);
+            }
         });
     }
 

@@ -16,8 +16,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.example.finstatest.api.ApiService;
+import com.example.finstatest.api.ApiServiceInstance;
 import java.util.ArrayList;
 import java.util.List;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProfileActivity extends AppCompatActivity implements PostAdapter.OnPostInteractionListener {
     private ImageView profileImage;
@@ -30,13 +35,18 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
     private Button editProfileButton;
     private Button changeThemeButton;
     private Button changeMusicButton;
+    private Button followButton;
     private PostAdapter postAdapter;
     private List<Post> userPosts;
     private String currentUsername;
+    private String currentUserId;
+    private String loggedInUserId;
     private Uri currentProfileImage;
     private String currentBio = "";
     private String currentTheme = "default";
     private String currentMusic = "";
+
+    private ApiService apiService;
 
     private final ActivityResultLauncher<String> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -53,8 +63,13 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        // Get username from intent
+        apiService = ApiServiceInstance.getService();
+
+        // Get username and user ID from intent
         currentUsername = getIntent().getStringExtra("username");
+        currentUserId = getIntent().getStringExtra("userId");
+        loggedInUserId = getIntent().getStringExtra("loggedInUserId");
+
         if (currentUsername == null) {
             currentUsername = "user"; // Default username if none provided
         }
@@ -75,6 +90,7 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         editProfileButton = findViewById(R.id.editProfileButton);
         changeThemeButton = findViewById(R.id.changeThemeButton);
         changeMusicButton = findViewById(R.id.changeMusicButton);
+        followButton = findViewById(R.id.followButton);
 
         // Setup posts grid
         postsGrid = findViewById(R.id.postsGrid);
@@ -82,6 +98,13 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         userPosts = new ArrayList<>();
         postAdapter = new PostAdapter(userPosts, this);
         postsGrid.setAdapter(postAdapter);
+
+        // Show follow button only if viewing another user's profile
+        if (currentUserId != null && loggedInUserId != null && !currentUserId.equals(loggedInUserId)) {
+            followButton.setVisibility(View.VISIBLE);
+        } else {
+            followButton.setVisibility(View.GONE);
+        }
     }
 
     private void setupBottomNavigation() {
@@ -89,7 +112,9 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
-                startActivity(new Intent(this, HomeActivity.class));
+                Intent homeIntent = new Intent(this, HomeActivity.class);
+                homeIntent.putExtra("loggedInUserId", loggedInUserId);
+                startActivity(homeIntent);
                 finish();
                 return true;
             } else if (id == R.id.nav_search) {
@@ -145,6 +170,32 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
 
         profileImage.setOnClickListener(v -> {
             imagePickerLauncher.launch("image/*");
+        });
+
+        followButton.setOnClickListener(v -> {
+            if (currentUserId != null && loggedInUserId != null) {
+                followUser(loggedInUserId, currentUserId);
+            }
+        });
+    }
+
+    private void followUser(String followerId, String followeeId) {
+        apiService.followUser(followerId, followeeId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(ProfileActivity.this, "Successfully followed user", Toast.LENGTH_SHORT).show();
+                    followButton.setEnabled(false);
+                    followButton.setText("Following");
+                } else {
+                    Toast.makeText(ProfileActivity.this, "Failed to follow user", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(ProfileActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

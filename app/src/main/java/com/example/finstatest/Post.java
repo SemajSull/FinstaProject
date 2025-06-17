@@ -2,8 +2,10 @@ package com.example.finstatest;
 
 import java.util.Date;
 import java.util.List;
+import com.google.gson.annotations.SerializedName;
 
 public class Post {
+    @SerializedName("_id")
     private String id;
     private String username;
     private String imageUrl;
