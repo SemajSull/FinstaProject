@@ -73,7 +73,7 @@ public class SearchActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_profile) {
                 Intent profileIntent = new Intent(this, ProfileActivity.class);
-                profileIntent.putExtra("username", "user"); // TODO: Pass actual username
+                profileIntent.putExtra("userId", loggedInUserId);
                 profileIntent.putExtra("loggedInUserId", loggedInUserId);
                 startActivity(profileIntent);
                 finish();
