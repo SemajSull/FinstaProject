@@ -46,4 +46,16 @@ public interface ApiService {
 
     @GET("/users/search/{query}")
     Call<List<User>> searchUsers(@Path("query") String query);
+
+    @GET("posts/user/{userId}")
+    Call<List<Post>> getUserPosts(@Path("userId") String userId);
+
+    @GET("users/{userId}")
+    Call<User> getUser(@Path("userId") String userId);
+
+    @GET("follows/check/{followerId}/{followeeId}")
+    Call<Boolean> checkFollowStatus(@Path("followerId") String followerId, @Path("followeeId") String followeeId);
+
+    @DELETE("follows/{followerId}/{followeeId}")
+    Call<Void> unfollowUser(@Path("followerId") String followerId, @Path("followeeId") String followeeId);
 }

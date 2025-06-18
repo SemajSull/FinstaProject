@@ -276,6 +276,110 @@ app.get('/users/search/:query', async (req, res) => {
     }
 });
 
+// Get posts for a specific user
+app.get('/posts/user/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        console.log('Fetching posts for user:', userId);
+
+        const posts = await Post.find({ authorId: new mongoose.Types.ObjectId(userId) })
+                              .populate('authorId', 'username')
+                              .sort({ createdAt: -1 });
+
+        console.log('Found posts:', posts.length);
+
+        // Map the posts to a format compatible with your Android Post model
+        const formattedPosts = posts.map(post => ({
+            id: post._id.toString(),
+            username: post.authorId.username,
+            imageUrl: post.imageUrl,
+            caption: post.caption,
+            likesCount: post.likesCount || 0,
+            comments: [], // We'll add comments later
+            createdAt: post.createdAt,
+            isLiked: false
+        }));
+
+        res.status(200).json(formattedPosts);
+
+    } catch (error) {
+        console.error("Error fetching user posts:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get a single user by ID
+app.get('/users/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        console.log('Fetching user:', userId);
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Format the response to exclude sensitive information
+        const formattedUser = {
+            id: user._id,
+            username: user.username,
+            bio: user.bio,
+            profileImageUrl: user.profileImageUrl,
+            theme: user.theme,
+            backgroundMusicUrl: user.backgroundMusicUrl,
+            createdAt: user.createdAt
+        };
+
+        res.status(200).json(formattedUser);
+
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Check if one user follows another
+app.get('/follows/check/:followerId/:followeeId', async (req, res) => {
+    try {
+        const { followerId, followeeId } = req.params;
+        console.log('Checking follow status:', { followerId, followeeId });
+
+        const follow = await Follow.findOne({
+            followerId: new mongoose.Types.ObjectId(followerId),
+            followeeId: new mongoose.Types.ObjectId(followeeId)
+        });
+
+        res.status(200).json(!!follow); // Convert to boolean
+
+    } catch (error) {
+        console.error("Error checking follow status:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Unfollow a user
+app.delete('/follows/:followerId/:followeeId', async (req, res) => {
+    try {
+        const { followerId, followeeId } = req.params;
+        console.log('Unfollowing user:', { followerId, followeeId });
+
+        const result = await Follow.deleteOne({
+            followerId: new mongoose.Types.ObjectId(followerId),
+            followeeId: new mongoose.Types.ObjectId(followeeId)
+        });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'Follow relationship not found' });
+        }
+
+        res.status(200).send();
+
+    } catch (error) {
+        console.error("Error unfollowing user:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
    console.log(`Server running on port ${PORT}`);
