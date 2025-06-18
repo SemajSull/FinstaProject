@@ -8,6 +8,8 @@ import com.example.finstatest.Post;
 import retrofit2.Call;
 import retrofit2.http.*;
 import java.util.List;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 /**
  * Retrofit API service interface defining endpoints for the backend server.
@@ -58,4 +60,13 @@ public interface ApiService {
 
     @DELETE("follows/{followerId}/{followeeId}")
     Call<Void> unfollowUser(@Path("followerId") String followerId, @Path("followeeId") String followeeId);
+
+    @Multipart
+    @POST("posts")
+    Call<Void> createPost(
+        @Part MultipartBody.Part image,
+        @Part("caption") RequestBody caption,
+        @Part("tags") RequestBody tags,
+        @Part("authorId") RequestBody authorId
+    );
 }

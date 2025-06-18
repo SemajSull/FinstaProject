@@ -72,17 +72,17 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         apiService = ApiServiceInstance.getService();
 
         // Get username and user ID from intent
-        currentUsername = getIntent().getStringExtra("username");
         currentUserId = getIntent().getStringExtra("userId");
         loggedInUserId = getIntent().getStringExtra("loggedInUserId");
 
-        if (currentUsername == null) {
-            currentUsername = "user"; // Default username if none provided
+        if (currentUserId == null || loggedInUserId == null) {
+            Toast.makeText(this, "User information not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
         }
 
         initializeViews();
         setupBottomNavigation();
-        loadUserData();
         setupClickListeners();
 
         // Fetch user profile
@@ -112,10 +112,16 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         postsGrid.setAdapter(postAdapter);
 
         // Show follow button only if viewing another user's profile
-        if (currentUserId != null && loggedInUserId != null && !currentUserId.equals(loggedInUserId)) {
+        if (!currentUserId.equals(loggedInUserId)) {
             followButton.setVisibility(View.VISIBLE);
+            editProfileButton.setVisibility(View.GONE);
+            changeThemeButton.setVisibility(View.GONE);
+            changeMusicButton.setVisibility(View.GONE);
         } else {
             followButton.setVisibility(View.GONE);
+            editProfileButton.setVisibility(View.VISIBLE);
+            changeThemeButton.setVisibility(View.VISIBLE);
+            changeMusicButton.setVisibility(View.VISIBLE);
         }
 
         // Initialize no posts message
@@ -204,7 +210,8 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
             public void onResponse(Call<User> call, Response<User> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
-                    usernameText.setText(user.getUsername());
+                    currentUsername = user.getUsername();
+                    usernameText.setText(currentUsername);
                     bioText.setText(user.getBio() != null ? user.getBio() : "No bio yet");
 
                     // Show follow button only if viewing another user's profile

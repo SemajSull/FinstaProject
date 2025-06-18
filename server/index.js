@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 // const bcrypt = require('bcryptjs'); // Removed bcryptjs for plain text password
 const User = require('./models/User');
 const Post = require('./models/Post');
@@ -12,6 +15,25 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Configure multer for image upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'uploads/';
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 const MONGO_URI = 'mongodb+srv://appUser:appUser@finstacluster1.it3foso.mongodb.net/?retryWrites=true&w=majority&appName=FinstaCluster1'
 
@@ -376,6 +398,38 @@ app.delete('/follows/:followerId/:followeeId', async (req, res) => {
 
     } catch (error) {
         console.error("Error unfollowing user:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create a new post
+app.post('/posts', upload.single('image'), async (req, res) => {
+    try {
+        const { caption, tags, authorId } = req.body;
+        console.log('Creating post:', { caption, tags, authorId });
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'No image file provided' });
+        }
+
+        // Create the post
+        const post = new Post({
+            authorId: new mongoose.Types.ObjectId(authorId),
+            imageUrl: `/uploads/${req.file.filename}`,
+            caption: caption || '',
+            tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+            createdAt: new Date(),
+            likesCount: 0,
+            commentsCount: 0
+        });
+
+        await post.save();
+        console.log('Post created successfully:', post._id);
+
+        res.status(201).json(post);
+
+    } catch (error) {
+        console.error("Error creating post:", error);
         res.status(500).json({ error: error.message });
     }
 });

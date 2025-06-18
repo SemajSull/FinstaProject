@@ -74,8 +74,9 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
         // 4) Setup Create Post FAB
         FloatingActionButton fabCreatePost = findViewById(R.id.fabCreatePost);
         fabCreatePost.setOnClickListener(v -> {
-            // TODO: Launch CreatePostActivity
-            Toast.makeText(this, "Create Post coming soon!", Toast.LENGTH_SHORT).show();
+            Intent createPostIntent = new Intent(HomeActivity.this, CreatePostActivity.class);
+            createPostIntent.putExtra("loggedInUserId", loggedInUserId);
+            startActivity(createPostIntent);
         });
 
         // 5) Bottom nav handling
@@ -95,8 +96,8 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
             }
             else if (id == R.id.nav_profile) {
                 Intent profileIntent = new Intent(HomeActivity.this, ProfileActivity.class);
-                profileIntent.putExtra("username", "user"); // TODO: Pass actual username
-                profileIntent.putExtra("loggedInUserId", loggedInUserId); // Pass the logged in user ID
+                profileIntent.putExtra("userId", loggedInUserId); // Pass the logged in user ID as both userId and loggedInUserId
+                profileIntent.putExtra("loggedInUserId", loggedInUserId);
                 startActivity(profileIntent);
                 finish();
                 return true;
