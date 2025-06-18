@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true
+    required: true,
+    unique: true,
+    trim: true
   },
   passwordHash: {
     type: String,
@@ -19,7 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   theme: {
     type: String,
-    default: ''
+    default: 'default'
   },
   backgroundMusicUrl: {
     type: String,
@@ -27,7 +29,6 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    required: true,
     default: Date.now
   }
 });

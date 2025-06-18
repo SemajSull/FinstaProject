@@ -43,4 +43,7 @@ public interface ApiService {
 
     @POST("/users/{followerId}/follow/{followeeId}")
     Call<Void> followUser(@Path("followerId") String followerId, @Path("followeeId") String followeeId);
+
+    @GET("/users/search/{query}")
+    Call<List<User>> searchUsers(@Path("query") String query);
 }

@@ -118,7 +118,10 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
                 finish();
                 return true;
             } else if (id == R.id.nav_search) {
-                // TODO: Implement search activity
+                Intent searchIntent = new Intent(this, SearchActivity.class);
+                searchIntent.putExtra("loggedInUserId", loggedInUserId);
+                startActivity(searchIntent);
+                finish();
                 return true;
             } else if (id == R.id.nav_profile) {
                 // Already on profile

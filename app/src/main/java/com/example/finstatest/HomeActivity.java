@@ -87,7 +87,10 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
                 return true;
             }
             else if (id == R.id.nav_search) {
-                // TODO: launch SearchActivity
+                Intent searchIntent = new Intent(HomeActivity.this, SearchActivity.class);
+                searchIntent.putExtra("loggedInUserId", loggedInUserId);
+                startActivity(searchIntent);
+                finish();
                 return true;
             }
             else if (id == R.id.nav_profile) {

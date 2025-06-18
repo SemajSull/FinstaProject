@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 // const bcrypt = require('bcryptjs'); // Removed bcryptjs for plain text password
 const User = require('./models/User');
+const Post = require('./models/Post');
+const Follow = require('./models/Follow');
 
 dotenv.config();
 
@@ -143,36 +145,38 @@ app.get('/usercount', async(req, res) => {
 app.get('/posts/followed/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
+        console.log('Fetching posts for user:', userId);
 
         // Find all users that the current user follows
-        const followedUsers = await mongoose.model('Follow', new mongoose.Schema({}), 'follows')
-                                        .find({ followerId: new mongoose.Types.ObjectId(userId) });
+        const followedUsers = await Follow.find({ followerId: new mongoose.Types.ObjectId(userId) });
+        console.log('Found followed users:', followedUsers.length);
 
         const followedUserIds = followedUsers.map(follow => follow.followeeId);
+        console.log('Followed user IDs:', followedUserIds);
 
         // If the user follows no one, return an empty array
         if (followedUserIds.length === 0) {
+            console.log('No followed users found, returning empty array');
             return res.status(200).json([]);
         }
 
         // Find posts from these followed users, sorted by creation date
-        // Populate the authorId with the username from the User collection
-        const posts = await mongoose.model('Post', new mongoose.Schema({}), 'posts')
-                                .find({ authorId: { $in: followedUserIds } })
-                                .populate('authorId', 'username') // Populate authorId with username
-                                .sort({ createdAt: -1 }); // Most recent first
+        const posts = await Post.find({ authorId: { $in: followedUserIds } })
+                                .populate('authorId', 'username')
+                                .sort({ createdAt: -1 });
+
+        console.log('Found posts:', posts.length);
 
         // Map the posts to a format compatible with your Android Post model
         const formattedPosts = posts.map(post => ({
-            id: post._id.toString(), // Convert ObjectId to String
-            username: post.authorId.username, // Use the populated username
+            id: post._id.toString(),
+            username: post.authorId.username,
             imageUrl: post.imageUrl,
             caption: post.caption,
             likesCount: post.likesCount || 0,
-            // Note: comments are not directly in the Post schema, you'd fetch these separately if needed
-            comments: [], // Initialize as empty for now to avoid crashes
+            comments: [], // We'll add comments later
             createdAt: post.createdAt,
-            isLiked: false // This is client-side state, so default to false
+            isLiked: false
         }));
 
         res.status(200).json(formattedPosts);
@@ -220,6 +224,55 @@ app.post('/users/:followerId/follow/:followeeId', async (req, res) => {
     } catch (error) {
         console.error("Error following user:", error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Search users endpoint
+app.get('/users/search/:query', async (req, res) => {
+    try {
+        const query = req.params.query;
+        console.log('Searching for users with query:', query);
+        
+        // Simple exact match first
+        const user = await User.findOne({ username: query });
+        
+        if (user) {
+            // If exact match found, return just that user
+            const formattedUser = {
+                id: user._id.toString(),
+                username: user.username,
+                bio: user.bio || '',
+                profileImageUrl: user.profileImageUrl || '',
+                theme: user.theme || 'default',
+                backgroundMusicUrl: user.backgroundMusicUrl || '',
+                createdAt: user.createdAt
+            };
+            return res.status(200).json([formattedUser]);
+        }
+
+        // If no exact match, try partial match
+        const users = await User.find({
+            username: { $regex: query, $options: 'i' }
+        }).select('-passwordHash');
+
+        console.log('Found users:', users.length);
+
+        // Format the response
+        const formattedUsers = users.map(user => ({
+            id: user._id.toString(),
+            username: user.username,
+            bio: user.bio || '',
+            profileImageUrl: user.profileImageUrl || '',
+            theme: user.theme || 'default',
+            backgroundMusicUrl: user.backgroundMusicUrl || '',
+            createdAt: user.createdAt
+        }));
+
+        // Always return 200 with array (empty if no results)
+        res.status(200).json(formattedUsers);
+    } catch (error) {
+        console.error('Error searching users:', error);
+        res.status(500).json({ error: 'Failed to search users: ' + error.message });
     }
 });
 

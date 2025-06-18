@@ -41,6 +41,11 @@
             android:name=".HomeActivity"
             android:exported="false" />
 
+        <!-- Search screen -->
+        <activity
+            android:name=".SearchActivity"
+            android:exported="false" />
+
         <!-- Profile screen -->
         <activity
             android:name=".ProfileActivity"
