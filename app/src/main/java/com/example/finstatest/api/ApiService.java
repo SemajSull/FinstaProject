@@ -69,4 +69,10 @@ public interface ApiService {
         @Part("tags") RequestBody tags,
         @Part("authorId") RequestBody authorId
     );
+
+    /**
+     * Gets post and follower counts for a user by username
+     */
+    @GET("/users/{username}/counts")
+    Call<CountResponse> getUserCounts(@Path("username") String username);
 }

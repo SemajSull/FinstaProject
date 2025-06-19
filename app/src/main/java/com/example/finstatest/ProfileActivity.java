@@ -214,6 +214,9 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
                     usernameText.setText(currentUsername);
                     bioText.setText(user.getBio() != null ? user.getBio() : "No bio yet");
 
+                    // Fetch post and follower counts using the username
+                    fetchUserCounts(currentUsername);
+
                     // Show follow button only if viewing another user's profile
                     if (!currentUserId.equals(loggedInUserId)) {
                         followButton.setVisibility(View.VISIBLE);
@@ -229,6 +232,31 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 Toast.makeText(ProfileActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Fetch post and follower counts for the user
+    private void fetchUserCounts(String username) {
+        apiService.getUserCounts(username).enqueue(new Callback<com.example.finstatest.models.CountResponse>() {
+            @Override
+            public void onResponse(Call<com.example.finstatest.models.CountResponse> call, Response<com.example.finstatest.models.CountResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    postsCount.setText(String.valueOf(response.body().getPostCount()));
+                    followersCount.setText(String.valueOf(response.body().getFollowerCount()));
+                    followingCount.setText(String.valueOf(response.body().getFollowingCount()));
+                } else {
+                    postsCount.setText("0");
+                    followersCount.setText("0");
+                    followingCount.setText("0");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<com.example.finstatest.models.CountResponse> call, Throwable t) {
+                postsCount.setText("0");
+                followersCount.setText("0");
+                followingCount.setText("0");
             }
         });
     }

@@ -99,6 +99,24 @@ app.get('/users/username/:username', async(req, res) => {
   }
 });
 
+// Get post and follower counts for a user by username
+app.get('/users/:username/counts', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const [postCount, followerCount, followingCount] = await Promise.all([
+      Post.countDocuments({ authorId: user._id }),
+      Follow.countDocuments({ followeeId: user._id }),
+      Follow.countDocuments({ followerId: user._id })
+    ]);
+
+    res.json({ postCount, followerCount, followingCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Sign-in endpoint (plain text password for testing)
 app.post('/signin', async (req, res) => {
     const { username, password } = req.body;
@@ -215,6 +233,14 @@ app.post('/users/:followerId/follow/:followeeId', async (req, res) => {
         const followerId = req.params.followerId;
         const followeeId = req.params.followeeId;
 
+        // Debug log
+        console.log('Follow request:', { followerId, followeeId });
+
+        // Validate ObjectIds
+        if (!mongoose.Types.ObjectId.isValid(followerId) || !mongoose.Types.ObjectId.isValid(followeeId)) {
+            return res.status(400).json({ error: 'Invalid user ID(s)' });
+        }
+
         // Check if both users exist
         const [follower, followee] = await Promise.all([
             User.findById(followerId),
@@ -226,15 +252,17 @@ app.post('/users/:followerId/follow/:followeeId', async (req, res) => {
         }
 
         // Check if follow relationship already exists
-        const existingFollow = await mongoose.model('Follow', new mongoose.Schema({}), 'follows')
-            .findOne({ followerId: new mongoose.Types.ObjectId(followerId), followeeId: new mongoose.Types.ObjectId(followeeId) });
+        const existingFollow = await Follow.findOne({
+            followerId: new mongoose.Types.ObjectId(followerId),
+            followeeId: new mongoose.Types.ObjectId(followeeId)
+        });
 
         if (existingFollow) {
             return res.status(400).json({ error: 'Already following this user' });
         }
 
         // Create new follow relationship
-        const follow = new mongoose.model('Follow', new mongoose.Schema({}), 'follows')({
+        const follow = new Follow({
             followerId: new mongoose.Types.ObjectId(followerId),
             followeeId: new mongoose.Types.ObjectId(followeeId),
             createdAt: new Date()
