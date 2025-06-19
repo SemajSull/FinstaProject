@@ -4,6 +4,7 @@ import com.example.finstatest.models.CountResponse;
 import com.example.finstatest.models.User;
 import com.example.finstatest.models.SignInRequest;
 import com.example.finstatest.Post;
+import com.example.finstatest.models.ProfileImageResponse;
 
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -75,4 +76,17 @@ public interface ApiService {
      */
     @GET("/users/{username}/counts")
     Call<CountResponse> getUserCounts(@Path("username") String username);
+
+    /**
+     * Updates the user's bio and profile image
+     */
+    @PUT("/users/{id}/profile")
+    Call<User> updateUserProfile(@Path("id") String userId, @Body User userUpdate);
+
+    /**
+     * Uploads a new profile image for the user
+     */
+    @Multipart
+    @POST("/users/{id}/profile-image")
+    Call<ProfileImageResponse> uploadProfileImage(@Path("id") String userId, @Part MultipartBody.Part image);
 }

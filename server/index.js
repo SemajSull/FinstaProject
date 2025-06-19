@@ -462,7 +462,37 @@ app.post('/posts', upload.single('image'), async (req, res) => {
     }
 });
 
+// Update user bio and profile image
+app.put('/users/:id/profile', async (req, res) => {
+  try {
+    const { bio, profileImageUrl } = req.body;
+    const userId = req.params.id;
+    const update = {};
+    if (bio !== undefined) update.bio = bio;
+    if (profileImageUrl !== undefined) update.profileImageUrl = profileImageUrl;
+    const user = await User.findByIdAndUpdate(userId, update, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'Profile updated', user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload profile image
+app.post('/users/:id/profile-image', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+    // Return the URL to the uploaded image
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
-   console.log(`Server running on port ${PORT}`);
+   console.log('Server running on port ' + PORT);
 });

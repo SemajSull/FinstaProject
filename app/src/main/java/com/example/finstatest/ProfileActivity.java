@@ -179,8 +179,11 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
 
     private void setupClickListeners() {
         editProfileButton.setOnClickListener(v -> {
-            // TODO: Implement edit profile functionality
-            Toast.makeText(this, "Edit profile coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(ProfileActivity.this, EditProfileActivity.class);
+            intent.putExtra("profileImageUrl", currentProfileImage != null ? currentProfileImage.toString() : "");
+            intent.putExtra("bio", bioText.getText().toString());
+            intent.putExtra("userId", currentUserId);
+            startActivity(intent);
         });
 
         changeThemeButton.setOnClickListener(v -> {
