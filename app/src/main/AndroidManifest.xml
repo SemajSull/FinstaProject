@@ -62,6 +62,9 @@
         <!-- Edit Profile screen -->
         <activity android:name=".EditProfileActivity" />
 
+        <!-- Background Selection screen -->
+        <activity android:name=".BackgroundSelectionActivity" />
+
     </application>
 
 </manifest>

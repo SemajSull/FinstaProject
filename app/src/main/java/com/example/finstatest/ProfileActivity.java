@@ -27,10 +27,12 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import com.bumptech.glide.Glide;
 
 public class ProfileActivity extends AppCompatActivity implements PostAdapter.OnPostInteractionListener {
     private static final String TAG = "ProfileActivity";
     private ImageView profileImage;
+    private ImageView backgroundImage;
     private TextView usernameText;
     private EditText bioText;
     private TextView postsCount;
@@ -92,8 +94,20 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         fetchUserPosts();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh user profile to get updated background
+        if (currentUserId != null) {
+            fetchUserProfile();
+            // Also refresh posts to show newly created posts
+            fetchUserPosts();
+        }
+    }
+
     private void initializeViews() {
         profileImage = findViewById(R.id.profileImage);
+        backgroundImage = findViewById(R.id.backgroundImage);
         usernameText = findViewById(R.id.usernameText);
         bioText = findViewById(R.id.bioText);
         postsCount = findViewById(R.id.postsCount);
@@ -187,8 +201,10 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         });
 
         changeThemeButton.setOnClickListener(v -> {
-            // TODO: Implement theme change functionality
-            Toast.makeText(this, "Theme change coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(ProfileActivity.this, BackgroundSelectionActivity.class);
+            intent.putExtra("userId", currentUserId);
+            intent.putExtra("backgroundUrl", currentTheme);
+            startActivity(intent);
         });
 
         changeMusicButton.setOnClickListener(v -> {
@@ -214,8 +230,17 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
                     currentUsername = user.getUsername();
+                    currentTheme = user.getTheme();
                     usernameText.setText(currentUsername);
                     bioText.setText(user.getBio() != null ? user.getBio() : "No bio yet");
+
+                    // Load background image if available
+                    if (currentTheme != null && !currentTheme.isEmpty()) {
+                        Glide.with(ProfileActivity.this).load(currentTheme).into(backgroundImage);
+                    } else {
+                        backgroundImage.setImageDrawable(null);
+                        backgroundImage.setBackgroundColor(getResources().getColor(android.R.color.white));
+                    }
 
                     // Fetch post and follower counts using the username
                     fetchUserCounts(currentUsername);

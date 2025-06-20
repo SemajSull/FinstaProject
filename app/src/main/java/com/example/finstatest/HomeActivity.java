@@ -106,6 +106,13 @@ public class HomeActivity extends AppCompatActivity implements PostAdapter.OnPos
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh posts to show newly created posts
+        fetchFollowedPosts();
+    }
+
     private void fetchFollowedPosts() {
         if (loggedInUserId == null) {
             Toast.makeText(this, "User ID not available to fetch posts.", Toast.LENGTH_SHORT).show();

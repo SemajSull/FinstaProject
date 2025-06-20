@@ -16,6 +16,16 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Helper to construct full URL for images
+const getFullImageUrl = (req, imagePath) => {
+    if (!imagePath || imagePath.startsWith('http')) {
+        return imagePath;
+    }
+    // Ensure imagePath starts with a slash
+    const correctedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${req.protocol}://${req.get('host')}${correctedPath}`;
+};
+
 // Configure multer for image upload
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -88,7 +98,7 @@ app.get('/users/username/:username', async(req, res) => {
         username: user.username,
         // Include other fields as needed, but exclude passwordHash for security
         bio: user.bio,
-        profileImageUrl: user.profileImageUrl,
+        profileImageUrl: getFullImageUrl(req, user.profileImageUrl),
         theme: user.theme,
         backgroundMusicUrl: user.backgroundMusicUrl,
         createdAt: user.createdAt
@@ -211,13 +221,16 @@ app.get('/posts/followed/:userId', async (req, res) => {
         const formattedPosts = posts.map(post => ({
             id: post._id.toString(),
             username: post.authorId.username,
-            imageUrl: post.imageUrl,
+            imageUrl: getFullImageUrl(req, post.imageUrl),
             caption: post.caption,
             likesCount: post.likesCount || 0,
             comments: [], // We'll add comments later
             createdAt: post.createdAt,
             isLiked: false
         }));
+
+        console.log('Raw posts from database:', posts.map(p => p.toObject()));
+        console.log('Formatted posts being sent:', formattedPosts);
 
         res.status(200).json(formattedPosts);
 
@@ -292,7 +305,7 @@ app.get('/users/search/:query', async (req, res) => {
                 id: user._id.toString(),
                 username: user.username,
                 bio: user.bio || '',
-                profileImageUrl: user.profileImageUrl || '',
+                profileImageUrl: getFullImageUrl(req, user.profileImageUrl),
                 theme: user.theme || 'default',
                 backgroundMusicUrl: user.backgroundMusicUrl || '',
                 createdAt: user.createdAt
@@ -312,7 +325,7 @@ app.get('/users/search/:query', async (req, res) => {
             id: user._id.toString(),
             username: user.username,
             bio: user.bio || '',
-            profileImageUrl: user.profileImageUrl || '',
+            profileImageUrl: getFullImageUrl(req, user.profileImageUrl),
             theme: user.theme || 'default',
             backgroundMusicUrl: user.backgroundMusicUrl || '',
             createdAt: user.createdAt
@@ -337,18 +350,21 @@ app.get('/posts/user/:userId', async (req, res) => {
                               .sort({ createdAt: -1 });
 
         console.log('Found posts:', posts.length);
+        console.log('Raw posts from database:', posts.map(p => p.toObject()));
 
         // Map the posts to a format compatible with your Android Post model
         const formattedPosts = posts.map(post => ({
             id: post._id.toString(),
             username: post.authorId.username,
-            imageUrl: post.imageUrl,
+            imageUrl: getFullImageUrl(req, post.imageUrl),
             caption: post.caption,
             likesCount: post.likesCount || 0,
             comments: [], // We'll add comments later
             createdAt: post.createdAt,
             isLiked: false
         }));
+
+        console.log('Formatted posts being sent:', formattedPosts);
 
         res.status(200).json(formattedPosts);
 
@@ -374,7 +390,7 @@ app.get('/users/:userId', async (req, res) => {
             id: user._id,
             username: user.username,
             bio: user.bio,
-            profileImageUrl: user.profileImageUrl,
+            profileImageUrl: getFullImageUrl(req, user.profileImageUrl),
             theme: user.theme,
             backgroundMusicUrl: user.backgroundMusicUrl,
             createdAt: user.createdAt
@@ -433,19 +449,47 @@ app.delete('/follows/:followerId/:followeeId', async (req, res) => {
 // Create a new post
 app.post('/posts', upload.single('image'), async (req, res) => {
     try {
-        const { caption, tags, authorId } = req.body;
-        console.log('Creating post:', { caption, tags, authorId });
+        console.log('Creating post - Request body:', req.body);
+        console.log('Creating post - File:', req.file);
+        
+        const { caption, tags, authorId, imageUrl: imageUrlBody } = req.body;
+        let relativeImageUrl;
 
-        if (!req.file) {
-            return res.status(400).json({ error: 'No image file provided' });
+        if (req.file) {
+            // Use the uploaded file's path
+            relativeImageUrl = `/uploads/${req.file.filename}`;
+            console.log('Using uploaded file path:', relativeImageUrl);
+        } else if (imageUrlBody) {
+            // Use the URL from the request body
+            relativeImageUrl = imageUrlBody;
+            console.log('Using image URL from body:', relativeImageUrl);
+        } else {
+            console.log('No image file or URL provided');
+            return res.status(400).json({ error: 'No image file or URL provided' });
+        }
+
+        console.log('Creating post with authorId:', authorId);
+        console.log('Creating post with caption:', caption);
+        console.log('Creating post with tags:', tags);
+
+        // Handle tags - could be string (from multipart) or array (from JSON)
+        let processedTags = [];
+        if (tags) {
+            if (Array.isArray(tags)) {
+                // Tags is already an array
+                processedTags = tags;
+            } else if (typeof tags === 'string') {
+                // Tags is a string, split it
+                processedTags = tags.split(',').map(tag => tag.trim());
+            }
         }
 
         // Create the post
         const post = new Post({
             authorId: new mongoose.Types.ObjectId(authorId),
-            imageUrl: `/uploads/${req.file.filename}`,
+            imageUrl: relativeImageUrl,
             caption: caption || '',
-            tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+            tags: processedTags,
             createdAt: new Date(),
             likesCount: 0,
             commentsCount: 0
@@ -453,8 +497,13 @@ app.post('/posts', upload.single('image'), async (req, res) => {
 
         await post.save();
         console.log('Post created successfully:', post._id);
+        console.log('Post details:', post.toObject());
 
-        res.status(201).json(post);
+        const responsePost = post.toObject();
+        responsePost.imageUrl = getFullImageUrl(req, responsePost.imageUrl);
+        console.log('Sending response post:', responsePost);
+
+        res.status(201).json(responsePost);
 
     } catch (error) {
         console.error("Error creating post:", error);
@@ -484,8 +533,23 @@ app.post('/users/:id/profile-image', upload.single('image'), async (req, res) =>
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
+    const relativePath = `/uploads/${req.file.filename}`;
     // Return the URL to the uploaded image
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const imageUrl = getFullImageUrl(req, relativePath);
+    res.json({ imageUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload background image
+app.post('/users/:id/background-image', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+    const relativePath = `/uploads/${req.file.filename}`;
+    const imageUrl = getFullImageUrl(req, relativePath);
     res.json({ imageUrl });
   } catch (err) {
     res.status(500).json({ error: err.message });

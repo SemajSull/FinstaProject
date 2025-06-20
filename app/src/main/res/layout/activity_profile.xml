@@ -1,173 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <!-- Profile Header -->
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.3"
+        android:background="@android:color/white"/>
+
+    <!-- Main Content -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <!-- Profile Image -->
-        <ImageView
-            android:id="@+id/profileImage"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/default_profile"
-            android:background="@drawable/circle_background"/>
-
-        <!-- Profile Stats -->
+        <!-- Profile Header -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginStart="16dp">
+            android:orientation="horizontal"
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/usernameText"
-                android:layout_width="wrap_content"
+            <!-- Profile Image -->
+            <ImageView
+                android:id="@+id/profileImage"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_profile"
+                android:background="@drawable/circle_background"/>
+
+            <!-- Profile Stats -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
 
+                <TextView
+                    android:id="@+id/usernameText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Posts: "/>
+
+                    <TextView
+                        android:id="@+id/postsCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="Followers: "/>
+
+                    <TextView
+                        android:id="@+id/followersCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="Following: "/>
+
+                    <TextView
+                        android:id="@+id/followingCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Bio Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <EditText
+                android:id="@+id/bioText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:gravity="top"
+                android:hint="Add a bio..."
+                android:inputType="textMultiLine"
+                android:minLines="2"/>
+
+            <Button
+                android:id="@+id/followButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Follow"
+                android:visibility="gone"/>
+
+            <!-- Profile Control Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="8dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/editProfileButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Posts: "/>
+                    android:layout_weight="1"
+                    android:text="Edit Profile"
+                    android:layout_marginEnd="4dp"/>
 
-                <TextView
-                    android:id="@+id/postsCount"
-                    android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/changeThemeButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textStyle="bold"/>
+                    android:layout_weight="1"
+                    android:text="Change Background"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/changeMusicButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="Followers: "/>
-
-                <TextView
-                    android:id="@+id/followersCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="Following: "/>
-
-                <TextView
-                    android:id="@+id/followingCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textStyle="bold"/>
+                    android:layout_weight="1"
+                    android:text="Change Music"
+                    android:layout_marginStart="4dp"/>
             </LinearLayout>
         </LinearLayout>
+
+        <!-- Posts Grid -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/postsGrid"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="4dp"/>
+
+        <!-- Bottom Navigation -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:menu="@menu/bottom_nav_menu"/>
+
+        <TextView
+            android:id="@+id/tvNoPostsMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No posts yet"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintTop_toBottomOf="@id/postsGrid"
+            app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
     </LinearLayout>
-
-    <!-- Bio Section -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <EditText
-            android:id="@+id/bioText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:gravity="top"
-            android:hint="Add a bio..."
-            android:inputType="textMultiLine"
-            android:minLines="2"/>
-
-        <Button
-            android:id="@+id/followButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Follow"
-            android:visibility="gone"/>
-
-        <!-- Profile Control Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp">
-
-            <Button
-                android:id="@+id/editProfileButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Edit Profile"
-                android:layout_marginEnd="4dp"/>
-
-            <Button
-                android:id="@+id/changeThemeButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Change Theme"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"/>
-
-            <Button
-                android:id="@+id/changeMusicButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Change Music"
-                android:layout_marginStart="4dp"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Posts Grid -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/postsGrid"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="4dp"/>
-
-    <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigationView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:menu="@menu/bottom_nav_menu"/>
-
-    <TextView
-        android:id="@+id/tvNoPostsMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="No posts yet"
-        android:textSize="16sp"
-        android:visibility="gone"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintTop_toBottomOf="@id/postsGrid"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-</LinearLayout> 
+</FrameLayout> 

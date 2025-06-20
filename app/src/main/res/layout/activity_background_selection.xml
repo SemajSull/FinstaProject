@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose Background"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- Current Background Preview -->
+    <ImageView
+        android:id="@+id/currentBackgroundPreview"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:background="@android:color/white"
+        android:layout_marginBottom="24dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Current Background"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- Default Background Option -->
+    <Button
+        android:id="@+id/btnDefaultBackground"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Use Default (White)"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Upload from Gallery Option -->
+    <Button
+        android:id="@+id/btnUploadFromGallery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload from Gallery"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Enter URL Option -->
+    <Button
+        android:id="@+id/btnEnterUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Enter Image URL"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- URL Input (initially hidden) -->
+    <LinearLayout
+        android:id="@+id/urlInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/etImageUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter image URL..."
+            android:inputType="textUri"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnSetUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Set Background"
+            android:layout_marginBottom="16dp"/>
+    </LinearLayout>
+
+</LinearLayout> 

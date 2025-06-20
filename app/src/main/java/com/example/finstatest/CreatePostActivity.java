@@ -24,6 +24,7 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import com.example.finstatest.models.ProfileImageResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -59,6 +60,7 @@ public class CreatePostActivity extends AppCompatActivity {
                 imagePreview.setImageURI(uri);
                 imagePreview.setVisibility(View.VISIBLE);
                 imageUrlInput.setVisibility(View.GONE);
+                useUrlButton.setText("Use Image URL");
             }
         }
     );
@@ -99,214 +101,148 @@ public class CreatePostActivity extends AppCompatActivity {
                 useUrlButton.setText("Use Image URL");
             } else {
                 imageUrlInput.setVisibility(View.VISIBLE);
-                useUrlButton.setText("Use Gallery");
-                selectedImageUri = null;
                 imagePreview.setVisibility(View.GONE);
+                selectedImageUri = null;
+                useUrlButton.setText("Use Gallery");
             }
         });
 
         // Setup create button
-        createButton.setOnClickListener(v -> {
-            if (selectedImageUri == null && imageUrlInput.getVisibility() == View.GONE) {
-                Toast.makeText(this, "Please select an image or enter an image URL", Toast.LENGTH_SHORT).show();
+        createButton.setOnClickListener(v -> handleCreatePost());
+    }
+
+    private void handleCreatePost() {
+        String caption = captionInput.getText().toString().trim();
+        String tagsText = tagsInput.getText().toString().trim();
+        List<String> tags = tagsText.isEmpty() ? new ArrayList<>() : Arrays.asList(tagsText.split("\\s*,\\s*"));
+
+        if (selectedImageUri != null) {
+            // Option 1: Upload local image and create post in one call
+            createPostWithUpload(caption, tags);
+        } else if (imageUrlInput.getVisibility() == View.VISIBLE) {
+            // Option 2: Create post directly with a URL
+            String imageUrl = imageUrlInput.getText().toString().trim();
+            if (imageUrl.isEmpty()) {
+                Toast.makeText(this, "Please enter an image URL", Toast.LENGTH_SHORT).show();
                 return;
             }
+            createPostWithUrl(caption, tags, imageUrl);
+        } else {
+            Toast.makeText(this, "Please select an image or provide a URL", Toast.LENGTH_SHORT).show();
+        }
+    }
 
-            String caption = captionInput.getText().toString().trim();
-            String tagsText = tagsInput.getText().toString().trim();
-            List<String> tags = tagsText.isEmpty() ? new ArrayList<>() : 
-                              Arrays.asList(tagsText.split("\\s*,\\s*"));
+    private void createPostWithUrl(String caption, List<String> tags, String imageUrl) {
+        setLoadingState(true);
+        CreatePostRequest request = new CreatePostRequest(loggedInUserId, imageUrl, caption, new ArrayList<>(tags));
+        
+        Log.d(TAG, "Creating post with URL - authorId: " + loggedInUserId);
+        Log.d(TAG, "Creating post with URL - imageUrl: " + imageUrl);
+        Log.d(TAG, "Creating post with URL - caption: " + caption);
+        Log.d(TAG, "Creating post with URL - tags: " + tags);
 
-            if (selectedImageUri != null) {
-                createPostWithLocalImage(caption, tags);
-            } else {
-                createPostWithUrl(caption, tags);
+        apiService.createPostWithUrl(request).enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                setLoadingState(false);
+                Log.d(TAG, "Create post response code: " + response.code());
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Post created successfully!");
+                    Toast.makeText(CreatePostActivity.this, "Post created successfully!", Toast.LENGTH_SHORT).show();
+                    finish(); // Go back to the previous screen
+                } else {
+                    Log.e(TAG, "Failed to create post. Response: " + response.message());
+                    try {
+                        Log.e(TAG, "Error body: " + response.errorBody().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, "Could not read error body", e);
+                    }
+                    Toast.makeText(CreatePostActivity.this, "Failed to create post.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                setLoadingState(false);
+                Log.e(TAG, "Network error creating post", t);
+                Toast.makeText(CreatePostActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void createPostWithLocalImage(String caption, List<String> tags) {
+    private void createPostWithUpload(String caption, List<String> tags) {
+        setLoadingState(true);
+        Log.d(TAG, "Creating post with upload - authorId: " + loggedInUserId);
+        Log.d(TAG, "Creating post with upload - caption: " + caption);
+        Log.d(TAG, "Creating post with upload - tags: " + tags);
+
+        File imageFile;
         try {
-            File imageFile = createTempFileFromUri(selectedImageUri);
-            if (imageFile == null) {
-                Toast.makeText(this, "Failed to process image", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            RequestBody imageRequestBody = RequestBody.create(
-                MediaType.parse("image/*"),
-                imageFile
-            );
-            MultipartBody.Part imagePart = MultipartBody.Part.createFormData(
-                "image",
-                imageFile.getName(),
-                imageRequestBody
-            );
-
-            createPostRequest(imagePart, caption, tags);
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error creating post with local image", e);
-            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void createPostWithUrl(String caption, List<String> tags) {
-        String imageUrl = imageUrlInput.getText().toString().trim();
-        if (imageUrl.isEmpty()) {
-            Toast.makeText(this, "Please enter an image URL", Toast.LENGTH_SHORT).show();
+            imageFile = createTempFileFromUri(selectedImageUri);
+            Log.d(TAG, "Created temp file: " + imageFile.getAbsolutePath());
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to create temp file", e);
+            Toast.makeText(this, "Failed to read image file.", Toast.LENGTH_SHORT).show();
+            setLoadingState(false);
             return;
         }
 
-        // Show loading state
-        createButton.setEnabled(false);
-        createButton.setText("Creating post...");
+        RequestBody authorIdBody = RequestBody.create(MediaType.parse("text/plain"), loggedInUserId);
+        RequestBody captionBody = RequestBody.create(MediaType.parse("text/plain"), caption);
+        RequestBody tagsBody = RequestBody.create(MediaType.parse("text/plain"), String.join(",", tags));
 
-        // Download image from URL
-        executor.execute(() -> {
-            HttpURLConnection connection = null;
-            InputStream inputStream = null;
-            try {
-                Log.d(TAG, "Attempting to download image from URL: " + imageUrl);
-                URL url = new URL(imageUrl);
-                
-                // Set connection timeout
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(15000);
-                connection.setReadTimeout(15000);
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-                connection.setRequestProperty("Accept", "image/*");
-                
-                int responseCode = connection.getResponseCode();
-                Log.d(TAG, "Server response code: " + responseCode);
-                
-                if (responseCode != HttpURLConnection.HTTP_OK) {
-                    throw new IOException("Server returned: " + responseCode);
-                }
+        RequestBody requestFile = RequestBody.create(MediaType.parse(getContentResolver().getType(selectedImageUri)), imageFile);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("image", imageFile.getName(), requestFile);
 
-                inputStream = connection.getInputStream();
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                
-                if (bitmap == null) {
-                    throw new IOException("Failed to decode image");
-                }
+        Log.d(TAG, "Making API call to createPostWithUpload");
 
-                Log.d(TAG, "Successfully downloaded image, size: " + bitmap.getWidth() + "x" + bitmap.getHeight());
-                
-                // Save bitmap to temporary file
-                File tempFile = File.createTempFile("post_image_", ".jpg", getCacheDir());
-                FileOutputStream out = new FileOutputStream(tempFile);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
-                out.close();
-
-                Log.d(TAG, "Saved image to temporary file: " + tempFile.getAbsolutePath());
-
-                // Create request body
-                RequestBody imageRequestBody = RequestBody.create(
-                    MediaType.parse("image/*"),
-                    tempFile
-                );
-                MultipartBody.Part imagePart = MultipartBody.Part.createFormData(
-                    "image",
-                    tempFile.getName(),
-                    imageRequestBody
-                );
-
-                mainHandler.post(() -> {
-                    createPostRequest(imagePart, caption, tags);
-                    createButton.setEnabled(true);
-                    createButton.setText("Create Post");
-                });
-
-            } catch (Exception e) {
-                Log.e(TAG, "Error downloading image from URL: " + e.getMessage(), e);
-                mainHandler.post(() -> {
-                    Toast.makeText(CreatePostActivity.this, 
-                        "Error downloading image: " + e.getMessage(), 
-                        Toast.LENGTH_LONG).show();
-                    createButton.setEnabled(true);
-                    createButton.setText("Create Post");
-                });
-            } finally {
-                if (inputStream != null) {
+        apiService.createPostWithUpload(authorIdBody, captionBody, tagsBody, body).enqueue(new Callback<Post>() {
+            @Override
+            public void onResponse(Call<Post> call, Response<Post> response) {
+                setLoadingState(false);
+                Log.d(TAG, "Create post upload response code: " + response.code());
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Post created successfully via upload!");
+                    Toast.makeText(CreatePostActivity.this, "Post created successfully!", Toast.LENGTH_SHORT).show();
+                    finish();
+                } else {
+                    Log.e(TAG, "Failed to create post via upload. Response: " + response.message());
                     try {
-                        inputStream.close();
+                        Log.e(TAG, "Error body: " + response.errorBody().string());
                     } catch (IOException e) {
-                        Log.e(TAG, "Error closing input stream", e);
+                        Log.e(TAG, "Could not read error body", e);
                     }
+                    Toast.makeText(CreatePostActivity.this, "Failed to create post.", Toast.LENGTH_SHORT).show();
                 }
-                if (connection != null) {
-                    connection.disconnect();
-                }
+            }
+
+            @Override
+            public void onFailure(Call<Post> call, Throwable t) {
+                setLoadingState(false);
+                Log.e(TAG, "Network error creating post via upload", t);
+                Toast.makeText(CreatePostActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void createPostRequest(MultipartBody.Part imagePart, String caption, List<String> tags) {
-        Log.d(TAG, "Creating post request with caption: " + caption + ", tags: " + tags);
-        
-        RequestBody captionPart = RequestBody.create(
-            MediaType.parse("text/plain"),
-            caption
-        );
-        RequestBody tagsPart = RequestBody.create(
-            MediaType.parse("text/plain"),
-            String.join(",", tags)
-        );
-        RequestBody authorIdPart = RequestBody.create(
-            MediaType.parse("text/plain"),
-            loggedInUserId
-        );
-
-        apiService.createPost(imagePart, captionPart, tagsPart, authorIdPart)
-            .enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    if (response.isSuccessful()) {
-                        Log.d(TAG, "Post created successfully");
-                        Toast.makeText(CreatePostActivity.this, 
-                            "Post created successfully", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Log.e(TAG, "Failed to create post. Response code: " + response.code());
-                        Toast.makeText(CreatePostActivity.this,
-                            "Failed to create post: " + response.message(),
-                            Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    Log.e(TAG, "Network error creating post", t);
-                    Toast.makeText(CreatePostActivity.this,
-                        "Network error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-                }
-            });
+    private void setLoadingState(boolean isLoading) {
+        createButton.setEnabled(!isLoading);
+        createButton.setText(isLoading ? "Creating..." : "Create Post");
     }
 
-    private File createTempFileFromUri(Uri uri) {
-        try {
-            InputStream inputStream = getContentResolver().openInputStream(uri);
-            if (inputStream == null) return null;
-
-            File tempFile = File.createTempFile("post_image_", ".jpg", getCacheDir());
-            OutputStream outputStream = new FileOutputStream(tempFile);
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+    private File createTempFileFromUri(Uri uri) throws IOException {
+        InputStream inputStream = getContentResolver().openInputStream(uri);
+        File tempFile = File.createTempFile("temp_image", ".jpg", getCacheDir());
+        tempFile.deleteOnExit();
+        try (OutputStream out = new FileOutputStream(tempFile)) {
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
             }
-
-            inputStream.close();
-            outputStream.close();
-
-            return tempFile;
-        } catch (Exception e) {
-            Log.e(TAG, "Error creating temp file", e);
-            return null;
         }
+        inputStream.close();
+        return tempFile;
     }
 
     @Override

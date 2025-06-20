@@ -1,6 +1,7 @@
 package com.example.finstatest.api;
 
 import com.example.finstatest.models.CountResponse;
+import com.example.finstatest.CreatePostRequest;
 import com.example.finstatest.models.User;
 import com.example.finstatest.models.SignInRequest;
 import com.example.finstatest.Post;
@@ -62,14 +63,23 @@ public interface ApiService {
     @DELETE("follows/{followerId}/{followeeId}")
     Call<Void> unfollowUser(@Path("followerId") String followerId, @Path("followeeId") String followeeId);
 
+    /**
+     * Creates a new post by uploading an image file.
+     */
     @Multipart
     @POST("posts")
-    Call<Void> createPost(
-        @Part MultipartBody.Part image,
-        @Part("caption") RequestBody caption,
-        @Part("tags") RequestBody tags,
-        @Part("authorId") RequestBody authorId
+    Call<Post> createPostWithUpload(
+            @Part("authorId") RequestBody authorId,
+            @Part("caption") RequestBody caption,
+            @Part("tags") RequestBody tags,
+            @Part MultipartBody.Part image
     );
+
+    /**
+     * Creates a new post using an image URL.
+     */
+    @POST("posts")
+    Call<Post> createPostWithUrl(@Body CreatePostRequest postRequest);
 
     /**
      * Gets post and follower counts for a user by username
@@ -89,4 +99,11 @@ public interface ApiService {
     @Multipart
     @POST("/users/{id}/profile-image")
     Call<ProfileImageResponse> uploadProfileImage(@Path("id") String userId, @Part MultipartBody.Part image);
+
+    /**
+     * Uploads a new background image for the user
+     */
+    @Multipart
+    @POST("/users/{id}/background-image")
+    Call<ProfileImageResponse> uploadBackgroundImage(@Path("id") String userId, @Part MultipartBody.Part image);
 }
