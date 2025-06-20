@@ -55,6 +55,7 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
 
     private ApiService apiService;
     private TextView tvNoPostsMessage;
+    private boolean isProfileLoading = false;
 
     private final ActivityResultLauncher<String> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -98,7 +99,7 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
     protected void onResume() {
         super.onResume();
         // Refresh user profile to get updated background
-        if (currentUserId != null) {
+        if (currentUserId != null && !isProfileLoading) {
             fetchUserProfile();
             // Also refresh posts to show newly created posts
             fetchUserPosts();
@@ -224,9 +225,13 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
     }
 
     private void fetchUserProfile() {
+        if (isProfileLoading) return;
+        isProfileLoading = true;
+        
         apiService.getUser(currentUserId).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
+                isProfileLoading = false;
                 if (response.isSuccessful() && response.body() != null) {
                     User user = response.body();
                     currentUsername = user.getUsername();
@@ -234,9 +239,29 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
                     usernameText.setText(currentUsername);
                     bioText.setText(user.getBio() != null ? user.getBio() : "No bio yet");
 
+                    // Load profile image if available
+                    String profileImageUrl = user.getProfileImageUrl();
+                    if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                        Glide.with(ProfileActivity.this)
+                             .load(profileImageUrl)
+                             .placeholder(R.drawable.default_profile)
+                             .error(R.drawable.default_profile)
+                             .override(200, 200) // Limit image size for performance
+                             .centerCrop()
+                             .into(profileImage);
+                    } else {
+                        profileImage.setImageResource(R.drawable.default_profile);
+                    }
+
                     // Load background image if available
                     if (currentTheme != null && !currentTheme.isEmpty()) {
-                        Glide.with(ProfileActivity.this).load(currentTheme).into(backgroundImage);
+                        Glide.with(ProfileActivity.this)
+                             .load(currentTheme)
+                             .placeholder(android.R.color.white)
+                             .error(android.R.color.white)
+                             .override(800, 600) // Limit background image size
+                             .centerCrop()
+                             .into(backgroundImage);
                     } else {
                         backgroundImage.setImageDrawable(null);
                         backgroundImage.setBackgroundColor(getResources().getColor(android.R.color.white));
@@ -259,6 +284,7 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
+                isProfileLoading = false;
                 Toast.makeText(ProfileActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -28,6 +29,8 @@ import java.io.File;
 public class EditProfileActivity extends AppCompatActivity {
     private ImageView editProfileImage;
     private Button btnSelectImage;
+    private Button btnUseUrl;
+    private EditText editImageUrl;
     private EditText editBio;
     private Button btnSaveProfile;
     private Uri selectedImageUri;
@@ -42,6 +45,8 @@ public class EditProfileActivity extends AppCompatActivity {
 
         editProfileImage = findViewById(R.id.editProfileImage);
         btnSelectImage = findViewById(R.id.btnSelectImage);
+        btnUseUrl = findViewById(R.id.btnUseUrl);
+        editImageUrl = findViewById(R.id.editImageUrl);
         editBio = findViewById(R.id.editBio);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
 
@@ -65,16 +70,80 @@ public class EditProfileActivity extends AppCompatActivity {
                     if (uri != null) {
                         selectedImageUri = uri;
                         editProfileImage.setImageURI(uri);
+                        editImageUrl.setVisibility(View.GONE);
+                        btnUseUrl.setText("Use Image URL");
                     }
                 }
         );
 
-        btnSelectImage.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
+        btnSelectImage.setOnClickListener(v -> {
+            if (editImageUrl.getVisibility() == View.VISIBLE) {
+                // In URL mode, switch back to gallery mode
+                editImageUrl.setVisibility(View.GONE);
+                btnUseUrl.setText("Use Image URL");
+                selectedImageUri = null;
+            } else {
+                // In gallery mode, open image picker
+                imagePickerLauncher.launch("image/*");
+            }
+        });
+
+        // Setup URL input toggle
+        btnUseUrl.setOnClickListener(v -> {
+            if (editImageUrl.getVisibility() == View.VISIBLE) {
+                editImageUrl.setVisibility(View.GONE);
+                btnUseUrl.setText("Use Image URL");
+                selectedImageUri = null;
+            } else {
+                editImageUrl.setVisibility(View.VISIBLE);
+                selectedImageUri = null;
+                btnUseUrl.setText("Use Gallery");
+            }
+        });
+
+        // Add text change listener to preview URL images
+        editImageUrl.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                String url = s.toString().trim();
+                if (!url.isEmpty()) {
+                    Glide.with(EditProfileActivity.this)
+                         .load(url)
+                         .placeholder(R.drawable.default_profile)
+                         .error(R.drawable.default_profile)
+                         .into(editProfileImage);
+                }
+            }
+        });
 
         btnSaveProfile.setOnClickListener(v -> {
             String newBio = editBio.getText().toString();
-            uploadProfileImageAndSave(newBio);
+            handleProfileUpdate(newBio);
         });
+    }
+
+    private void handleProfileUpdate(String newBio) {
+        if (selectedImageUri != null) {
+            // Upload local image first, then save profile
+            uploadProfileImageAndSave(newBio);
+        } else if (editImageUrl.getVisibility() == View.VISIBLE) {
+            // Use image URL directly
+            String imageUrl = editImageUrl.getText().toString().trim();
+            if (imageUrl.isEmpty()) {
+                Toast.makeText(this, "Please enter an image URL", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            saveProfile(newBio, imageUrl);
+        } else {
+            // No new image, just save with current image
+            saveProfile(newBio, currentProfileImageUrl);
+        }
     }
 
     private void uploadProfileImageAndSave(String newBio) {
