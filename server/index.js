@@ -161,10 +161,10 @@ app.post('/signin', async (req, res) => {
 app.post('/users', async(req, res) => {
   console.log('Received: ', req.body); //see what Android is sending
   try {
-    const { username, password, bio, profileImageUrl, theme, backgroundMusicUrl } = req.body;
+    const { username, passwordHash, bio, profileImageUrl, theme, backgroundMusicUrl } = req.body;
 
     // Save password in plain text for testing
-    const passwordHash = password; // Store plain text password
+    // const passwordHash = password; // REMOVED: now using passwordHash directly
 
     const user = new User({ 
         username,
