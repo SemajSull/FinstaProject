@@ -12,7 +12,7 @@
     <!-- Username Field -->
 
     <ImageView
-        android:id="@+id/ivSignInTitle"
+        android:id="@+id/ivFinstaLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="150dp"
@@ -22,6 +22,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:scaleType="centerInside" />
 
+    <TextView
+        android:id="@+id/tvFinstaText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Finsta"
+        android:textColor="@color/black"
+        android:textSize="40dp"
+        android:fontFamily="@font/lobster_regular"
+        app:layout_constraintTop_toBottomOf="@id/ivFinstaLogo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
 
     <EditText
         android:id="@+id/etSignInUsername"
@@ -29,10 +42,9 @@
         android:layout_height="wrap_content"
         android:hint="Username"
         android:inputType="textPersonName"
-        app:layout_constraintTop_toBottomOf="@id/ivSignInTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvFinstaText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Password Field -->
     <EditText
