@@ -47,6 +47,8 @@ public class SignInActivity extends AppCompatActivity {
         });
     }
 
+
+
     private void attemptSignIn() {
         Log.d("SIGNIN", "Got here attemptSignIn");
         String username = etUsername.getText().toString().trim();

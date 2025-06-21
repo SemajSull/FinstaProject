@@ -8,26 +8,28 @@
     android:padding="32dp">
 
     <!-- Title -->
-    <TextView
-        android:id="@+id/tvSignInTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Sign In"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Username Field -->
+
+    <ImageView
+        android:id="@+id/ivSignInTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="150dp"
+        android:src="@drawable/logo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:scaleType="centerInside" />
+
+
     <EditText
         android:id="@+id/etSignInUsername"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="Username"
         android:inputType="textPersonName"
-        app:layout_constraintTop_toBottomOf="@id/tvSignInTitle"
+        app:layout_constraintTop_toBottomOf="@id/ivSignInTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="24dp" />

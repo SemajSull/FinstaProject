@@ -37,7 +37,8 @@
         <!-- Sign-Up screen -->
         <activity
             android:name=".SignUpActivity"
-            android:exported="false" />
+            android:exported="false"
+            />
 
         <!-- Home screen -->
         <activity
