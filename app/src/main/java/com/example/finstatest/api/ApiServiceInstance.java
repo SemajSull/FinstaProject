@@ -5,7 +5,7 @@ package com.example.finstatest.api;
  * This prevents redundant Retrofit object creation across the app.
  */
 public class ApiServiceInstance {
-    private static final String BASE_URL = "http://192.168.3.216:3000/";
+    private static final String BASE_URL = "http://192.168.1.183:3000/";
     private static ApiService apiService;
     public static ApiService getService() {
         if (apiService == null) {
