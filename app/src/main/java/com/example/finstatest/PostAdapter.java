@@ -66,6 +66,12 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
                 .placeholder(R.drawable.ic_placeholder)
                 .into(holder.ivPostImage);
 
+        Glide.with(holder.itemView.getContext())
+                .load(post.getPfpUrl())
+                .placeholder(R.drawable.ic_profile)
+                .circleCrop()
+                .into(holder.ivPfp);
+
         // Set click listeners
         holder.btnLike.setOnClickListener(v -> {
             if (listener != null) {
@@ -108,11 +114,13 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.ViewHolder> {
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvUsername, tvLikes, tvCaption, tvComments, tvTimestamp;
-        ImageView ivPostImage;
+        ImageView ivPostImage, ivPfp;
         ImageButton btnLike, btnComment;
+
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
+            ivPfp = itemView.findViewById(R.id.ivUserPfp);
             tvUsername = itemView.findViewById(R.id.tvUsername);
             ivPostImage = itemView.findViewById(R.id.ivPostImage);
             tvLikes = itemView.findViewById(R.id.tvLikes);
