@@ -556,6 +556,24 @@ app.post('/users/:id/background-image', upload.single('image'), async (req, res)
   }
 });
 
+// Update music url
+app.put('/users/:id/music', async (req, res) => {
+  try {
+    console.log('Updating music url:', req.body);
+    const { backgroundMusicUrl } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: { backgroundMusicUrl: backgroundMusicUrl ?? null } },
+      { new: true }
+    );
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
    console.log('Server running on port ' + PORT);

@@ -66,6 +66,8 @@
         <!-- Background Selection screen -->
         <activity android:name=".BackgroundSelectionActivity" />
 
+        <!-- Music Selection screen -->
+        <activity android:name=".MusicSelectionActivity" />
     </application>
 
 </manifest>

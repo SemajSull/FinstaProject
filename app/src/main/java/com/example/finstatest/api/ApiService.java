@@ -2,6 +2,7 @@ package com.example.finstatest.api;
 
 import com.example.finstatest.models.CountResponse;
 import com.example.finstatest.CreatePostRequest;
+import com.example.finstatest.models.MusicPayload;
 import com.example.finstatest.models.User;
 import com.example.finstatest.models.SignInRequest;
 import com.example.finstatest.Post;
@@ -106,4 +107,12 @@ public interface ApiService {
     @Multipart
     @POST("/users/{id}/background-image")
     Call<ProfileImageResponse> uploadBackgroundImage(@Path("id") String userId, @Part MultipartBody.Part image);
+
+    /**
+     * Update user's profile music
+     */
+    @PUT("/users/{id}/music")
+    Call<User> updateMusic(
+            @Path("id") String userId,
+            @Body MusicPayload body);
 }

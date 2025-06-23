@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -52,6 +53,7 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
     private String currentBio = "";
     private String currentTheme = "default";
     private String currentMusic = "";
+    private WebView musicPlayerWebView;
 
     private ApiService apiService;
     private TextView tvNoPostsMessage;
@@ -118,6 +120,11 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         changeThemeButton = findViewById(R.id.changeThemeButton);
         changeMusicButton = findViewById(R.id.changeMusicButton);
         followButton = findViewById(R.id.followButton);
+
+        // Music player setup
+        musicPlayerWebView = findViewById(R.id.musicPlayerWebView);
+        musicPlayerWebView.getSettings().setJavaScriptEnabled(true);
+        musicPlayerWebView.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
         // Setup posts grid
         postsGrid = findViewById(R.id.postsGrid);
@@ -209,8 +216,11 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
         });
 
         changeMusicButton.setOnClickListener(v -> {
-            // TODO: Implement music change functionality
-            Toast.makeText(this, "Music change coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(ProfileActivity.this, MusicSelectionActivity.class);
+            intent.putExtra("userId", currentUserId);
+            intent.putExtra("loggedInUserId", loggedInUserId);
+            intent.putExtra("currentMusic", currentMusic);
+            startActivity(intent);
         });
 
         profileImage.setOnClickListener(v -> {
@@ -276,6 +286,17 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
                         checkFollowStatus();
                     } else {
                         followButton.setVisibility(View.GONE);
+                    }
+                    currentMusic = user.getBackgroundMusicUrl();
+
+                    if (currentMusic != null && !currentMusic.isEmpty() && currentMusic.contains("soundcloud.com")) {
+                        String embedUrl = "https://w.soundcloud.com/player/?url=" + Uri.encode(currentMusic)
+                                + "&auto_play=true&hide_related=false&show_comments=false&show_user=false&visual=false&color=%23121212";
+
+                        musicPlayerWebView.setVisibility(View.VISIBLE);
+                        musicPlayerWebView.loadUrl(embedUrl);
+                    } else {
+                        musicPlayerWebView.setVisibility(View.GONE);
                     }
                 } else {
                     Toast.makeText(ProfileActivity.this, "Failed to load profile", Toast.LENGTH_SHORT).show();

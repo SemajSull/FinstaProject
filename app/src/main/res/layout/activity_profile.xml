@@ -129,29 +129,41 @@
                 <Button
                     android:id="@+id/editProfileButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
                     android:text="Edit Profile"
-                    android:layout_marginEnd="4dp"/>
+                    android:textAllCaps="false" />
 
                 <Button
                     android:id="@+id/changeThemeButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
                     android:text="Change Background"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"/>
+                    android:textAllCaps="false" />
 
                 <Button
                     android:id="@+id/changeMusicButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
                     android:text="Change Music"
-                    android:layout_marginStart="4dp"/>
+                    android:textAllCaps="false" />
             </LinearLayout>
         </LinearLayout>
+
+        <WebView
+            android:id="@+id/musicPlayerWebView"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/rounded_black_background"
+            android:elevation="4dp"
+            android:visibility="gone" />
 
         <!-- Posts Grid -->
         <androidx.recyclerview.widget.RecyclerView
