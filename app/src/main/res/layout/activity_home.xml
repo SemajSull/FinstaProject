@@ -15,10 +15,13 @@
             android:id="@+id/headerTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:gravity="center"
+            android:paddingTop="16dp"
+            android:paddingLeft="16dp"
+            android:gravity="left"
             android:text="Finsta"
-            android:textSize="24sp"
+            android:textColor="@color/black"
+            android:fontFamily="@font/lobster_regular"
+            android:textSize="35dp"
             android:textStyle="bold" />
 
         <!-- Posts list -->

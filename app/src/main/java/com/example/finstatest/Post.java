@@ -14,6 +14,8 @@ public class Post {
     private List<String> comments;
     private Date createdAt;
     private boolean isLiked;
+    private String pfpUrl;
+
 
     public Post(String username, String imageUrl, String caption, int likesCount, List<String> comments) {
         this.username = username;
@@ -34,6 +36,8 @@ public class Post {
     public List<String> getComments() { return comments; }
     public Date getCreatedAt() { return createdAt; }
     public boolean isLiked() { return isLiked; }
+
+    public String getPfpUrl() { return pfpUrl; }
 
     // Setters
     public void setId(String id) { this.id = id; }
