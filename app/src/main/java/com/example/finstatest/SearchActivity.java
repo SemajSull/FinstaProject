@@ -31,6 +31,17 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
+        TextView headerTitle = findViewById(R.id.headerTitle);
+
+        headerTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent homeIntent = new Intent(SearchActivity.this, HomeActivity.class);
+                homeIntent.putExtra("loggedInUserId", loggedInUserId);
+                startActivity(homeIntent);
+            }
+        });
+
         // Get the logged-in user ID from the Intent
         loggedInUserId = getIntent().getStringExtra("loggedInUserId");
         if (loggedInUserId == null) {

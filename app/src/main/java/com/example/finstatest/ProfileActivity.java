@@ -95,6 +95,17 @@ public class ProfileActivity extends AppCompatActivity implements PostAdapter.On
 
         // Fetch user posts
         fetchUserPosts();
+
+        TextView headerTitle = findViewById(R.id.headerTitle);
+
+        headerTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent homeIntent = new Intent(ProfileActivity.this, HomeActivity.class);
+                homeIntent.putExtra("loggedInUserId", loggedInUserId);
+                startActivity(homeIntent);
+            }
+        });
     }
 
     @Override
